@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Home } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,15 +24,17 @@ export default function NotFoundCard() {
           <p className="text-lg">
             Oops! The page you&apos;re looking for doesn&apos;t exist.
           </p>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             It might have been moved or deleted, or perhaps you mistyped the
             URL.
           </p>
         </div>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button className="w-full max-w-[200px]">
-          <Home className="mr-2 h-4 w-4" /> Go to Homepage
+        <Button className="w-full max-w-[200px]" asChild>
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" /> Go to Homepage
+          </Link>
         </Button>
       </CardFooter>
     </Card>

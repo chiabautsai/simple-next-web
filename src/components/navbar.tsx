@@ -1,8 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun, User } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useSession } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
+import { Session } from "next-auth";
+
+import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +20,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const menuItems = [
     { name: "Home", href: "/" },
@@ -24,60 +28,49 @@ export default function Navbar() {
     { name: "Contact", href: "/contact" },
   ];
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
-
   return (
     <nav className="border-b bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <span className="text-primary text-2xl font-bold">Logo</span>
+              <span className="text-2xl font-bold text-primary">Logo</span>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 {menuItems.map((item, index) => (
-                  <a
+                  <Link
                     key={index}
                     href={item.href}
-                    className="hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium"
+                    className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
           <div className="hidden md:flex md:items-center md:space-x-4">
             <ThemeToggle />
-            {isLoggedIn ? (
-              <UserMenu onLogout={handleLogout} />
-            ) : (
-              <Button onClick={handleLogin}>Login</Button>
-            )}
+            <AuthSection />
           </div>
           <div className="-mr-2 flex md:hidden">
             <Button
               variant="outline"
               size="icon"
-              className="hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+              className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
                 <svg
-                  className="block h-6 w-6"
+                  className="block h-6 w-6 transition-transform"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   aria-hidden="true"
+                  style={{ transform: "rotate(90deg)" }}
                 >
                   <path
                     strokeLinecap="round"
@@ -88,12 +81,13 @@ export default function Navbar() {
                 </svg>
               ) : (
                 <svg
-                  className="block h-6 w-6"
+                  className="block h-6 w-6 transition-transform"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   aria-hidden="true"
+                  style={{ transform: "rotate(0deg)" }}
                 >
                   <path
                     strokeLinecap="round"
@@ -112,23 +106,19 @@ export default function Navbar() {
         <div className="md:hidden">
           <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
             {menuItems.map((item, index) => (
-              <a
+              <Link
                 key={index}
                 href={item.href}
-                className="hover:bg-accent hover:text-accent-foreground block rounded-md px-3 py-2 text-base font-medium"
+                className="block rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground"
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
           </div>
           <div className="border-t border-gray-700 pb-3 pt-4">
             <div className="flex items-center justify-between px-5">
               <ThemeToggle />
-              {isLoggedIn ? (
-                <UserMenu onLogout={handleLogout} />
-              ) : (
-                <Button onClick={handleLogin}>Login</Button>
-              )}
+              <AuthSection />
             </div>
           </div>
         </div>
@@ -164,28 +154,43 @@ function ThemeToggle() {
   );
 }
 
-function UserMenu({ onLogout }: { onLogout: () => void }) {
+function AuthSection() {
+  const { data: session } = useSession();
+
+  return session ? (
+    <UserMenu session={session} />
+  ) : (
+    <Button onClick={() => signIn()}>Login</Button>
+  );
+}
+
+function UserMenu({ session }: { session: Session }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src="/placeholder.svg?height=32&width=32"
-              alt="@user"
+              src={session?.user?.image || ""}
+              alt={session?.user?.name || ""}
             />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarFallback>
+              {session?.user?.name
+                ?.split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuItem className="flex-col items-start">
-          <div className="text-sm font-medium">user@example.com</div>
-          <div className="text-muted-foreground text-xs">User Account</div>
+          <div className="text-sm font-medium">{session?.user?.email}</div>
+          <div className="text-xs text-muted-foreground">User Account</div>
         </DropdownMenuItem>
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
