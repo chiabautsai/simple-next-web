@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const menuItems = [
     { name: "Home", href: "/" },
@@ -21,6 +23,14 @@ export default function Navbar() {
     { name: "Services", href: "/services" },
     { name: "Contact", href: "/contact" },
   ];
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
 
   return (
     <nav className="border-b bg-background">
@@ -44,8 +54,13 @@ export default function Navbar() {
               </div>
             </div>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden md:flex md:items-center md:space-x-4">
             <ThemeToggle />
+            {isLoggedIn ? (
+              <UserMenu onLogout={handleLogout} />
+            ) : (
+              <Button onClick={handleLogin}>Login</Button>
+            )}
           </div>
           <div className="-mr-2 flex md:hidden">
             <Button
@@ -107,8 +122,13 @@ export default function Navbar() {
             ))}
           </div>
           <div className="border-t border-gray-700 pb-3 pt-4">
-            <div className="flex items-center px-5">
+            <div className="flex items-center justify-between px-5">
               <ThemeToggle />
+              {isLoggedIn ? (
+                <UserMenu onLogout={handleLogout} />
+              ) : (
+                <Button onClick={handleLogin}>Login</Button>
+              )}
             </div>
           </div>
         </div>
@@ -139,6 +159,33 @@ function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("system")}>
           System
         </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function UserMenu({ onLogout }: { onLogout: () => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage
+              src="/placeholder.svg?height=32&width=32"
+              alt="@user"
+            />
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuItem className="flex-col items-start">
+          <div className="text-sm font-medium">user@example.com</div>
+          <div className="text-muted-foreground text-xs">User Account</div>
+        </DropdownMenuItem>
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
